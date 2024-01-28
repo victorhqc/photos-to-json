@@ -3,25 +3,20 @@ use snafu::prelude::*;
 use path_absolutize::*;
 use walkdir::WalkDir;
 use crate::models::image::Image;
+use crate::utils::{write_json, Error as WriteJsonError};
 
-pub fn generate(path: & Path, target: & Path) -> Result<(), Error> {
+pub fn generate(path: & Path, target: Option<&Path>, colors: u8, should_prettify: bool) -> Result<(), Error> {
     let absolute_path = path.absolutize().context(AbsolutePathSnafu)?;
-    println!("absolute path: {}", absolute_path.to_str().context(PathToStrSnafu)?);
-    let absolute_target = target.absolutize().context(AbsolutePathSnafu)?;
-    println!("absolute target: {}", absolute_target.to_str().context(PathToStrSnafu)?);
 
-    println!("generate from '{}' to '{}'", path.to_str().context(PathToStrSnafu)?, target.to_str().context(PathToStrSnafu)?);
-
-
-    let results: Vec<Image> = WalkDir::new(path).into_iter().map(|entry| {
+    let results: Vec<Image> = WalkDir::new(absolute_path).into_iter().map(|entry| {
         let entry = entry.context(BadEntrySnafu)?;
         let path = entry.path();
 
-        Ok(Image::build(path).context(BadImageSnafu)?)
+        Ok(Image::build(path, colors).context(BadImageSnafu)?)
     }).filter_map(|e: Result<Image, Error>| e.ok())
         .collect();
 
-    println!("Results: {:?}", results);
+    write_json(results, target, should_prettify).context(WriteJsonFileSnafu)?;
 
     Ok(())
 }
@@ -39,4 +34,7 @@ pub enum Error {
 
     #[snafu(display("Could not build an image: {}", source))]
     BadImage { source: crate::models::image::Error },
+
+    #[snafu(display("Failed to write JSON file: {}", source))]
+    WriteJsonFile { source: WriteJsonError },
 }
