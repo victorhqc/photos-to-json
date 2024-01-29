@@ -1,7 +1,10 @@
 [package]
 name = "photos-to-json"
-version = "0.1.0"
+version = "0.1.0-dev.1"
 edition = "2021"
+license = "MIT"
+authors = ["Victor Quiroz Castro <git@victorhqc.com>"]
+description = "Analyze a path with images and build a JSON with its information"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
