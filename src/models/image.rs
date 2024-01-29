@@ -10,6 +10,8 @@ pub struct Image {
     path: String,
     file_name: String,
     kind: ImageKind,
+    width: u32,
+    height: u32,
     colors: Vec<Color>,
 }
 
@@ -25,6 +27,9 @@ impl Image {
         let kind = ImageKind::from_str(extension)?;
 
         let img = image::open(path).context(FailedToOpenSnafu)?;
+        let height = img.height();
+        let width = img.width();
+
         let (buffer, color_type) = get_image_buffer(img);
         let colors = color_thief::get_palette(&buffer, color_type, 10, colors).context(BadPaletteSnafu)?.into_iter().map(|c| Color(c)).collect();
 
@@ -33,6 +38,8 @@ impl Image {
             file_name: String::from(file_name),
             kind,
             colors,
+            height,
+            width,
         })
     }
 }
